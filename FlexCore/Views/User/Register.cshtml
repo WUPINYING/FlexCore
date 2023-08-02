@@ -1,0 +1,320 @@
+﻿@section Styles{
+    <style>
+        #a {
+            border-radius: inherit;
+            border: solid;
+        }
+
+        #app {
+            margin: 20px;
+        }
+
+        #otrerLogin {
+            display: flex;
+            justify-content: center;
+            width: 100%; /* 設定容器寬度 */
+        }
+
+        .box {
+            padding: 10px; /* 添加一些內邊距來增加間距 */
+        }
+
+        .spacer {
+            margin-right: 10px;
+        }
+
+        .logBtn {
+            width: 150px;
+        }
+
+        p {
+            position: relative;
+            text-align: center; /* 將文字置於中間 */
+        }
+
+            p::before,
+            p::after {
+                content: "";
+                position: absolute;
+                top: 50%;
+                width: 220px; /* 調整線段的長度 */
+                height: 1px; /* 調整線段的粗細 */
+                background-color: black; /* 設定線段的顏色 */
+            }
+
+            p::before {
+                left: 0;
+            }
+
+            p::after {
+                right: 0;
+            }
+    </style>
+}
+
+<body>
+    <div id="app">
+        @*v-on:submit.prevent="validateForm"阻止表單的默認提交行為*@
+        <form action="#" method="post" v-on:submit.prevent="validateForm">
+            <div id="a" class="container mb-3" style="width:40%">
+                <div>
+                    <h4>LOGIN</h4>
+                </div>
+
+                @*Account Password Login UI*@
+                <div>
+                    <div class="from-group" v-if="errors.length">
+                        <ul>
+                            <span v-for="error in errors" class="text-danger">{{error}}</span>
+                        </ul>
+                    </div>
+                    <div class="from-group mb-3 ">
+                        <label>帳號</label>
+                        <input type="text" name="account" v-model="account" class="form-control" placeholder="帳號" onfocus="this.placeholder=''" />
+                    </div>
+                    <div class="from-group mb-3">
+                        <label>密碼</label>
+                        <input type="password" name="password" v-model="password" class="form-control" placeholder="密碼" onfocus="this.placeholder=''" />
+                    </div>
+
+                    @*註冊欄位*@
+                    <div class="from-group mb-3" v-show="checkPwdInput">
+                        <label>確認密碼</label>
+                        <input type="password" name="checkPwd" v-model="checkPwd" class="form-control" placeholder="與密碼相同" onfocus="this.placeholder=''" />
+                    </div>
+                    <div class="from-group mb-3" v-show="emailInput">
+                        <label>會員名稱</label>
+                        <input type="text" name="name" v-model="name" class="form-control" placeholder="ex.吳阿瑩" onfocus="this.placeholder=''" />
+                    </div>                    
+                    <div class="from-group mb-3" v-show="emailInput">
+                        <label>信箱</label>
+                        <input type="text" name="email" v-model="email" class="form-control" placeholder="ex.flex@gmail.com" onfocus="this.placeholder=''" />
+                    </div>
+                    <div class="from-group mb-3" v-show="birInput">
+                        <label>生日</label>
+                        <input type="text" name="birthday" v-model="birthday" v-bind="btnDisable" class="form-control" onfocus="this.placeholder=''" />
+                    </div>
+                    <div class="from-group mb-3" v-show="emailInput">
+                        <label>手機</label>
+                        <input type="text" name="mobile" v-model="mobile" class="form-control" placeholder="ex.09xxxxxxxx" onfocus="this.placeholder=''" />
+                    </div>
+
+                    @*按鈕*@
+                    <div class="from-group mb-3">
+                        <button type="submit" class="btn btn-danger logBtn" v-show="loginBtn" @@click="loginAndRegister ">登入 / 註冊</button>
+                    </div>
+                    <div class="from-group mb-3">
+                        <button type="submit" class="btn btn-danger logBtn" v-show="regBtn" @@click="checkRegister">註冊</button>
+                    </div>
+                    <div class="from-group mb-3">
+                        <a href="#" class="" v-show="forgetPassword" @@click="forgetPwd">忘記密碼</a>
+                        <span class="spacer"></span>
+                        <a href="#" class="" v-show="register" @@click="handleRegister">註冊</a>
+                    </div>
+                </div>
+                <div>
+                    <p>或</p>
+                </div>
+
+                @*Google Login UI*@
+                <div id="otrerLogin">
+                    <div class="box">
+                        <script src="https://accounts.google.com/gsi/client" async defer></script>
+                        <div id="g_id_onload"
+                             data-client_id="355151080332-19lpj0fcsfk9nihnrcvjulft4cp09j7i.apps.googleusercontent.com"
+                             data-login_uri="https://localhost:7010/Home/Index"
+                             data-auto_prompt="false">
+                        </div>
+                        <div class="g_id_signin"
+                             data-type="standard"
+                             data-size="large"
+                             data-theme="outline"
+                             data-text="sign_in_with"
+                             data-shape="rectangular"
+                             data-logo_alignment="left">
+                        </div>
+                    </div>
+                    <div class="box">
+                        <button type="submit" class="btn btn-warning logBtn" @@click="fbLogin">fb</button>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</body>
+
+
+@section Scripts{
+    <script src="https://unpkg.com/vue@3.2.36/dist/vue.global.prod.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js" integrity="sha512-uMtXmF28A2Ab/JJO2t/vYhlaa/3ahUOgj1Zf27M5rOo8/+fcTUVH0/E0ll68njmjrLqOBjXM3V9NiPFL5ywWPQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+        var baseAddress = "https://localhost:7248";
+        var vueApp = {
+            data() {
+                return {
+                    errors: [],
+                    account: "",
+                    password: "",
+                    checkPwd: "",
+                    email:"",
+                    mobile:"",
+                    name:"",
+
+                    forgetPassword: false,
+                    register: false,
+                    birInput: false,
+
+                    loginBtn: true,
+                    regBtn: false
+                };
+            },
+            methods: {
+                validateForm: function () {
+                    //alert("register");
+
+                    this.errors = []; //每次驗證前要先清除前次的驗證錯誤訊息
+
+                    //欄位驗證未通過
+                    if (!this.account || !this.password) {
+                        this.errors.push("帳號或密碼尚未填寫")
+                        
+                    }
+
+                    //格式錯誤...
+                },
+                //欄位驗證通過
+                loginAndRegister: function () {
+                    //alert("loginAndRegister");
+
+                    if (this.account && this.password) {
+                        var uri = `${baseAddress}/api/User/Register`;
+                        var data = {
+                            account: this.account,
+                            encryptedpassword: this.password
+                        }
+                        axios.post(uri, data)
+                            .then(res => {
+                                //alert(JSON.stringify(res.data));
+                                var data = res.data;
+                                //console.log("data:", data);
+
+                                if (data) {
+                                    //ValidateFaild
+                                    if (this.account === data.account && this.password !== data.encryptedPassword) {
+                                        //alert("帳號正確、密碼錯誤")
+                                        //console.log("this.account:", this.account);
+                                        //console.log("this.password:", this.password);
+
+                                        //密碼錯誤或尚未註冊
+                                        this.errors.push("帳號、密碼錯誤或尚未註冊");
+
+                                        //顯示忘記密碼及註冊
+                                        this.forgetPassword = true;
+                                        this.register = true;
+                                    }
+
+                                    //ValidateSuccessful
+                                    else {
+                                        //alert("帳號密碼正確")
+                                        //驗證身分
+                                        var uri = `${baseAddress}/api/User/Verified`;
+                                        var data = {
+                                            account: this.account,
+                                            encryptedpassword: this.password
+                                        }
+                                        axios.post(uri, data).then(res => {
+                                            if (res.data) {
+                                                window.location.href = "https://localhost:7010/Home/Index";
+                                                //進入驗證狀態
+                                            } else {
+                                                alert("找不到網址!")
+                                            }
+
+                                        }).catch(err => {
+                                            err
+                                        })
+                                    }
+
+                                }
+                            })
+                            .catch(err => {
+                                alert(err);
+                            });
+                        return true;
+                    }
+                },
+                forgetPwd: function () {
+                    //alert("forgetPwd");
+                },
+                handleRegister: function () {
+                    //alert("handleRegister");
+                    this.errors = [];
+
+                    //this.account = [];
+                    this.checkPwd = [];
+                    this.email = [];
+                    this.birthday = [];
+
+                    //顯示剩餘3欄位
+                    this.checkPwdInput = true;
+                    this.emailInput = true;
+                    this.birInput = true;
+
+                    this.loginBtn = false;
+                    this.regBtn = true;
+
+                },
+                checkRegister: function () {
+                    //alert("checkRegister");
+                    var uri = `${baseAddress}/api/User/Insert`;
+
+                    var data = {}
+                    data.Account=this.account;
+                    data.EncryptedPassword=this.password;
+                    data.Name=this.name;
+                    data.Email=this.email;
+                    data.Birthday=this.birthday;
+                    data.Mobile = this.mobile;
+
+                    
+                    //alert("Hi")
+                    //欄位驗證未通過
+                    if (!this.validateForm()) {
+
+                        //這邊執行不到
+                        if (!this.account || !this.password || !this.checkPwd || !this.email || !this.birthday) {
+                            this.errors.push("欄位尚未填寫完畢")
+                            return;
+                        }
+
+                        if (this.password !== this.checkPwd) {
+                            //alert("密碼與確認密碼必須相同!")
+                            this.errors.push("密碼與確認密碼必須相同!")
+                        }
+
+                        //if (this.account === data.account || this.email === data.email) {
+                        //    alert("帳號或信箱已經被註冊過囉!")
+                        //    this.errors.push("帳號或信箱已經被註冊過囉!");
+                        //}
+                    }
+
+                    //欄位驗證通過
+                    axios.post(uri, data).then(res => {
+                        window.location.href = "https://localhost:7010/Home/Index";
+                        //跳出恭喜成為會員資訊
+
+                    }).catch(err => {
+                        err
+                    })
+                },
+                fbLogin: function () {
+                    alert("fbRegister");
+                }
+            }
+
+        };
+        var app = Vue.createApp(vueApp).mount("#app");
+    </script>
+}
